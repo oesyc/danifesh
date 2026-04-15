@@ -5,9 +5,12 @@ import type { NextRequest } from "next/server"
 
 export default async function middleware(req: NextRequest) {
   const token = await getToken({
-    req,
-    secret: process.env.NEXTAUTH_SECRET,
-  })
+  req,
+  secret: process.env.NEXTAUTH_SECRET,
+  cookieName: process.env.NODE_ENV === "production" 
+    ? "__Secure-authjs.session-token"  // production
+    : "authjs.session-token",          // development
+})
 
   const pathname = req.nextUrl.pathname
   const isLoggedIn = !!token
