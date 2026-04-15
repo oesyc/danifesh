@@ -35,7 +35,6 @@ export async function GET(req: NextRequest) {
           user:    { select: { id: true, name: true, email: true } },
           address: { select: { city: true, country: true } },
           items:   { select: { id: true, productName: true, quantity: true, unitPrice: true } },
-          customerNote: true
         },
         orderBy: { createdAt: "desc" },
         skip: (page - 1) * limit,

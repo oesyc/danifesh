@@ -255,7 +255,7 @@ export default function CheckoutPage() {
   // ── Loading / auth guards ────────────────────────────────
   if (status === "loading" || status === "unauthenticated") {
     return (
-      <div className="min-h-screen flex items-center justify-center overflow-x-hidden">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-[#3f554f] border-t-transparent rounded-full animate-spin" />
       </div>
     )
@@ -353,8 +353,8 @@ export default function CheckoutPage() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 xl:gap-10">
+      <div className="max-w-5xl mx-auto px-4 lg:px-6 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 xl:gap-6 items-start min-w-0">
 
           {/* ════ LEFT — Form / Review ═══════════════════════ */}
           <div>
@@ -610,7 +610,7 @@ export default function CheckoutPage() {
           </div>
 
           {/* ════ RIGHT — Order Summary ═══════════════════════ */}
-          <div className="lg:sticky lg:top-20 lg:self-start">
+          <div className="lg:sticky lg:top-20 self-start">
             <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
               <div className="px-5 py-4 border-b border-gray-50">
                 <h3 className="font-bold text-gray-900">Order Summary</h3>
