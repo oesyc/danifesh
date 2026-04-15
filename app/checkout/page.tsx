@@ -310,7 +310,7 @@ export default function CheckoutPage() {
 
           <div className="flex flex-col gap-2">
             <button
-              onClick={() => router.push("/dashboard/orders")}
+              onClick={() => router.push("/dashboard")}
               className="w-full py-3 bg-[#3f554f] hover:bg-[#2f403b] text-white rounded-xl font-semibold text-sm transition"
             >
               your order →
@@ -515,7 +515,7 @@ export default function CheckoutPage() {
 
             {/* ── STEP 2: Review & Place ────────────────────── */}
             {step === 2 && (
-              <div className="space-y-4">
+              <div className="space-y-4 w-full max-w-full overflow-x-hidden">
                 {/* Delivery summary */}
                 <div className="bg-white rounded-2xl border border-gray-100 p-5">
                   <div className="flex items-center justify-between mb-3">

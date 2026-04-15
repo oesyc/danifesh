@@ -94,7 +94,7 @@ export default function CartPage() {
     return sum + price * item.quantity
   }, 0)
 
-  const FREE_SHIPPING_THRESHOLD = 100000 // Rs 10000
+  const FREE_SHIPPING_THRESHOLD = 1000000 // Rs 10000
   const shippingCost = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : 20000 // Rs 200
   const total = subtotal + shippingCost
   const remaining = FREE_SHIPPING_THRESHOLD - subtotal
