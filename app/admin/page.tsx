@@ -28,6 +28,7 @@ type Product = {
 type Order = {
   id: string; orderNumber: string; status: string; paymentStatus: string
   totalAmount: number; createdAt: string
+  customerNote: string | null;
   user: { name: string | null; email: string }
   items: { productName: string; quantity: number; unitPrice: number }[]
 }
@@ -703,10 +704,10 @@ export default function AdminPanel() {
             </div>
             <div className="bg-white border border-gray-100 rounded-xl overflow-hidden">
               <table className="w-full text-sm">
-                <thead><tr><Th>Order #</Th><Th>Customer</Th><Th>Items</Th><Th>Amount</Th><Th>Payment</Th><Th>Status</Th><Th>Date</Th><Th>Action</Th></tr></thead>
+                <thead><tr><Th>Order #</Th><Th>Customer</Th><Th>Items</Th><Th>Amount</Th><Th>Payment</Th><Th>Status</Th><Th>Customer Note</Th><Th>Date</Th><Th>Action</Th></tr></thead>
                 <tbody>
                   {loading ? <tr><td colSpan={8} className="text-center py-10 text-gray-400">Loading...</td></tr>
-                    : orders.length === 0 ? <tr><td colSpan={8} className="text-center py-10 text-gray-400">Koi order nahi</td></tr>
+                    : orders.length === 0 ? <tr><td colSpan={8} className="text-center py-10 text-gray-400">No Orders</td></tr>
                       : orders.map(o => (
                         <tr key={o.id} className="hover:bg-gray-50 transition-colors">
                           <Td cls="font-mono text-xs">{o.orderNumber}</Td>
@@ -715,6 +716,7 @@ export default function AdminPanel() {
                           <Td cls="font-medium">{fmt(o.totalAmount)}</Td>
                           <Td><Badge label={o.paymentStatus} color={o.paymentStatus === "PAID" ? "green" : "yellow"} /></Td>
                           <Td><Badge label={o.status.replace(/_/g, " ")} color={statusColor(o.status)} /></Td>
+                          <Td cls="text-gray-400 text-xs">{o.customerNote || "-"}</Td>
                           <Td cls="text-gray-400 text-xs">{new Date(o.createdAt).toLocaleDateString()}</Td>
                           <Td><ActionBtn onClick={() => openOrderModal(o)}>Manage</ActionBtn></Td>
                         </tr>

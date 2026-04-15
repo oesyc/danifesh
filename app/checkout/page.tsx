@@ -255,7 +255,7 @@ export default function CheckoutPage() {
   // ── Loading / auth guards ────────────────────────────────
   if (status === "loading" || status === "unauthenticated") {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center overflow-x-hidden">
         <div className="w-8 h-8 border-2 border-[#3f554f] border-t-transparent rounded-full animate-spin" />
       </div>
     )
