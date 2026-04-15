@@ -4,15 +4,17 @@ import { NextRequest, NextResponse } from "next/server"
 import { requireAdmin, logAction } from "@/src/lib/admin-guard"
 import { prisma } from "@/src/lib/prisma"
 
-type Params = { params: { id: string } }
+type Params = { params: Promise<{ id: string }> }
 
 // PATCH — order status update karo
 export async function PATCH(req: NextRequest, { params }: Params) {
   const { error, session } = await requireAdmin()
   if (error) return error
 
+  const { id } = await params
+
   try {
-    const existing = await prisma.order.findUnique({ where: { id: params.id } })
+    const existing = await prisma.order.findUnique({ where: { id: id } })
     if (!existing) return NextResponse.json({ error: "Order Not Found" }, { status: 404 })
 
     const { status, trackingNumber, adminNote } = await req.json()
@@ -27,7 +29,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     }
 
     const updated = await prisma.order.update({
-      where: { id: params.id },
+      where: { id: id },
       data: {
         status,
         ...(trackingNumber && { trackingNumber }),
@@ -40,14 +42,14 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     // History mein daalo
     await prisma.orderStatusHistory.create({
       data: {
-        orderId:   params.id,
+        orderId:   id,
         status:    status as any,
         note:      adminNote ?? `Status changed to ${status}`,
         createdBy: session!.user.id,
       },
     })
 
-    await logAction(session!.user.id, "UPDATE_ORDER", "Order", params.id, {
+    await logAction(session!.user.id, "UPDATE_ORDER", "Order", id, {
       orderNumber:    existing.orderNumber,
       previousStatus: existing.status,
       newStatus:      status,

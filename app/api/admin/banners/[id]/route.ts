@@ -4,19 +4,19 @@ import { NextRequest, NextResponse } from "next/server"
 import { requireAdmin, logAction } from "@/src/lib/admin-guard"
 import { prisma } from "@/src/lib/prisma"
 
-type Params = { params: { id: string } }
+type Params = { params: Promise<{ id: string }> }
 
 export async function PATCH(req: NextRequest, { params }: Params) {
   const { error, session } = await requireAdmin()
   if (error) return error
-
+const {id} = await params;
   try {
-    const existing = await prisma.banner.findUnique({ where: { id: params.id } })
+    const existing = await prisma.banner.findUnique({ where: { id:id } })
     if (!existing) return NextResponse.json({ error: "Not Found Banner" }, { status: 404 })
 
     const body = await req.json()
     const updated = await prisma.banner.update({
-      where: { id: params.id },
+      where: { id: id },
       data: {
         ...(body.title     !== undefined && { title:     body.title }),
         ...(body.subtitle  !== undefined && { subtitle:  body.subtitle }),
@@ -30,7 +30,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       },
     })
 
-    await logAction(session!.user.id, "UPDATE_BANNER", "Banner", params.id, { title: existing.title })
+    await logAction(session!.user.id, "UPDATE_BANNER", "Banner", id, { title: existing.title })
     return NextResponse.json({ message: "Banner updated!", banner: updated })
   } catch (e) {
     return NextResponse.json({ error: "Server error" }, { status: 500 })
@@ -40,13 +40,14 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 export async function DELETE(_: NextRequest, { params }: Params) {
   const { error, session } = await requireAdmin()
   if (error) return error
+  const { id } = await params
 
   try {
-    const existing = await prisma.banner.findUnique({ where: { id: params.id } })
+    const existing = await prisma.banner.findUnique({ where: { id: id } })
     if (!existing) return NextResponse.json({ error: "Banner nahi mila" }, { status: 404 })
 
-    await prisma.banner.delete({ where: { id: params.id } })
-    await logAction(session!.user.id, "DELETE_BANNER", "Banner", params.id, { title: existing.title })
+    await prisma.banner.delete({ where: { id:id } })
+    await logAction(session!.user.id, "DELETE_BANNER", "Banner", id, { title: existing.title })
     return NextResponse.json({ message: "Banner deleted!" })
   } catch (e) {
     return NextResponse.json({ error: "Server error" }, { status: 500 })

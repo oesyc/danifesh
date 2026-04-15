@@ -4,20 +4,21 @@ import { NextRequest, NextResponse } from "next/server"
 import { requireAdmin, logAction } from "@/src/lib/admin-guard"
 import { prisma } from "@/src/lib/prisma"
 
-type Params = { params: { id: string } }
+type Params = { params: Promise<{ id: string }> }
 
 export async function PATCH(req: NextRequest, { params }: Params) {
   const { error, session } = await requireAdmin()
   if (error) return error
+  const { id } = await params
 
   try {
-    const existing = await prisma.coupon.findUnique({ where: { id: params.id } })
+    const existing = await prisma.coupon.findUnique({ where: { id: id } })
     if (!existing) return NextResponse.json({ error: "Coupon Not Found" }, { status: 404 })
 
     const body = await req.json()
 
     const updated = await prisma.coupon.update({
-      where: { id: params.id },
+      where: { id:id },
       data: {
         ...(body.description     !== undefined && { description:     body.description }),
         ...(body.discountValue   !== undefined && { discountValue:   parseInt(body.discountValue) }),
@@ -29,7 +30,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       },
     })
 
-    await logAction(session!.user.id, "UPDATE_COUPON", "Coupon", params.id, {
+    await logAction(session!.user.id, "UPDATE_COUPON", "Coupon", id, {
       code: existing.code,
     })
 
@@ -42,14 +43,14 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 export async function DELETE(_: NextRequest, { params }: Params) {
   const { error, session } = await requireAdmin()
   if (error) return error
-
+const {id} = await params;
   try {
-    const existing = await prisma.coupon.findUnique({ where: { id: params.id } })
+    const existing = await prisma.coupon.findUnique({ where: { id: id } })
     if (!existing) return NextResponse.json({ error: "Coupon Not Found" }, { status: 404 })
 
-    await prisma.coupon.delete({ where: { id: params.id } })
+    await prisma.coupon.delete({ where: { id: id } })
 
-    await logAction(session!.user.id, "DELETE_COUPON", "Coupon", params.id, {
+    await logAction(session!.user.id, "DELETE_COUPON", "Coupon", id, {
       code: existing.code,
     })
 
