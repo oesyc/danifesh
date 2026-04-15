@@ -134,10 +134,10 @@ export default function HeroSection() {
 
           {/* CTAs */}
           <div className="flex items-center gap-4 flex-wrap">
-            <button className="group relative overflow-hidden bg-[#3f554f] text-white font-semibold text-sm uppercase tracking-widest px-8 py-4 rounded-full hover:bg-[#2f403b] transition-all duration-300 active:scale-95">
+            <a href="/shop" className="group relative overflow-hidden bg-[#3f554f] text-white font-semibold text-sm uppercase tracking-widest px-8 py-4 rounded-full hover:bg-[#2f403b] transition-all duration-300 active:scale-95">
               {slide.cta}
               <span className="ml-2 group-hover:ml-4 transition-all duration-200 inline-block">→</span>
-            </button>
+            </a>
             <button className="flex items-center gap-3 group cursor-pointer">
               {/* Play button */}
               <div className="w-12 h-12 rounded-full border-2 border-[#3f554f] flex items-center justify-center group-hover:bg-[#3f554f] group-hover:border-[#3f554f] transition-all duration-300">
