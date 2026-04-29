@@ -314,13 +314,13 @@ const CONTACT_INFO: ContactInfo[] = [
   {
     icon: <PhoneIcon />,
     label: "Call Us",
-    value: "+92 300 2931047",
+    value: "+92 345 2931047",
     sub: "Mon – Sat, 10am – 7pm",
   },
   {
     icon: <EmailIcon />,
     label: "Email Us",
-    value: "help@danifesh.com",
+    value: "admin@danifesh.store",
     sub: "Response within 24 hours",
   },
   {
@@ -425,7 +425,7 @@ export default function ContactPage(): React.JSX.Element {
               </div>
               <div className="px-6 pb-6">
                 <a
-                  href="https://wa.me/923002931047"
+                  href="https://wa.me/923452931047"
                   target="_blank"
                   rel="noreferrer"
                   className="block w-full text-center bg-white text-[#128C7E] font-bold text-sm uppercase tracking-widest py-3 rounded-full hover:bg-white/90 transition-all active:scale-95"

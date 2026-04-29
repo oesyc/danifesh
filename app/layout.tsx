@@ -13,9 +13,42 @@ const geistSans = Bebas_Neue({
 });
 
 export const metadata: Metadata = {
- title: "Danifesh — Pakistan's Premium Online Store",
-description: "Shop the latest fashion, accessories & lifestyle products at Danifesh. Fast delivery across Pakistan with Cash on Delivery available.",
-};
+  metadataBase: new URL("https://www.danifesh.store"),
+  title: {
+    default: "Danifesh — Online Store",
+    template: "%s | Danifesh",
+  },
+  description: "Shop the latest products at Danifesh. Fast delivery, easy returns.",
+  keywords: ["danifesh", "online shopping", "pakistan", "store"],
+  authors: [{ name: "Danifesh" }],
+  creator: "Asad",
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://www.danifesh.store",
+    siteName: "Danifesh",
+    title: "Danifesh — Online Store",
+    description: "Shop the latest products at Danifesh.",
+    images: [
+      {
+        url: "/og-image.jpg", // 1200x630 image banao public folder mein
+        width: 1200,
+        height: 630,
+        alt: "Danifesh Store",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Danifesh — Online Store",
+    description: "Shop the latest products at Danifesh.",
+    images: ["/og-image.jpg"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+}
 
 export default async function RootLayout({
   children,
