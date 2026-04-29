@@ -27,10 +27,28 @@ type Product = {
 }
 type Order = {
   id: string; orderNumber: string; status: string; paymentStatus: string
-  totalAmount: number; createdAt: string
-  customerNote: string | null;
-  user: { name: string | null; email: string }
-  items: { productName: string; quantity: number; unitPrice: number }[]
+  totalAmount: number; subtotal: number; shippingCost: number
+  taxAmount: number; discountAmount: number
+  paymentMethod: string | null; trackingNumber: string | null
+  customerNote: string | null; adminNote: string | null
+  createdAt: string; shippedAt: string | null; deliveredAt: string | null
+  user: { name: string | null; email: string; phone: string | null }
+  address: {
+    firstName: string; lastName: string; addressLine1: string
+    addressLine2: string | null; city: string; state: string
+    postalCode: string; country: string; phone: string | null
+  }
+  items: {
+    id: string; productName: string; productImage: string | null
+    quantity: number; unitPrice: number; totalPrice: number
+    variantInfo: string | null
+    variant: {
+      sku: string | null; imageUrl: string | null
+      values: { value: string; option: { name: string } }[]
+    } | null
+  }[]
+  
+  coupon: { code: string; discountType: string; discountValue: number } | null
 }
 type Review = {
   id: string; rating: number; title: string | null; body: string | null
@@ -125,6 +143,8 @@ export default function AdminPanel() {
 
   // ── Order modal ───────────────────────────────────────────
   const [orderModal, setOrderModal] = useState<{ open: boolean; order: Order | null }>({ open: false, order: null })
+  // ── Order View Modal ──────────────────────────────────────
+const [viewModal, setViewModal] = useState<{ open: boolean; order: Order | null }>({ open: false, order: null })
   const [orderNewSt, setOrderNewSt] = useState("")
   const [orderTrack, setOrderTrack] = useState("")
   const [orderNote, setOrderNote] = useState("")
@@ -718,7 +738,10 @@ export default function AdminPanel() {
                           <Td><Badge label={o.status.replace(/_/g, " ")} color={statusColor(o.status)} /></Td>
                           <Td cls="text-gray-400 text-xs">{o.customerNote || "-"}</Td>
                           <Td cls="text-gray-400 text-xs">{new Date(o.createdAt).toLocaleDateString()}</Td>
-                          <Td><ActionBtn onClick={() => openOrderModal(o)}>Manage</ActionBtn></Td>
+                          <Td>
+                            <ActionBtn onClick={() => setViewModal({ open: true, order: o })}>View</ActionBtn>
+                            <ActionBtn onClick={() => openOrderModal(o)}>Manage</ActionBtn>
+                            </Td>
                         </tr>
                       ))}
                 </tbody>
@@ -1008,6 +1031,159 @@ export default function AdminPanel() {
           </div>
         </div>
       )}
+
+      {/* Order View Modal */}
+{viewModal.open && viewModal.order && (() => {
+  const o = viewModal.order
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-start justify-center z-50 overflow-auto py-8 px-4">
+      <div className="bg-white rounded-xl w-full max-w-2xl shadow-2xl">
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <div>
+            <h2 className="font-semibold text-base">Order Details</h2>
+            <p className="text-xs text-gray-400 font-mono mt-0.5">{o.orderNumber}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge label={o.status.replace(/_/g, " ")} color={statusColor(o.status)} />
+            <Badge label={o.paymentStatus} color={o.paymentStatus === "PAID" ? "green" : "yellow"} />
+            <button onClick={() => setViewModal({ open: false, order: null })}
+              className="ml-2 text-gray-400 hover:text-gray-600 text-xl leading-none">×</button>
+          </div>
+        </div>
+
+        <div className="p-6 space-y-5">
+
+          {/* Customer + Address */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-gray-50 rounded-lg p-3">
+              <p className="text-xs font-medium text-gray-500 mb-2">👤 Customer</p>
+              <p className="text-sm font-medium">{o.user.name ?? "—"}</p>
+              <p className="text-xs text-gray-500">{o.user.email}</p>
+              {o.user.phone && <p className="text-xs text-gray-500">{o.user.phone}</p>}
+            </div>
+            <div className="bg-gray-50 rounded-lg p-3">
+              <p className="text-xs font-medium text-gray-500 mb-2">📍 Shipping Address</p>
+              <p className="text-sm font-medium">{o.address.firstName} {o.address.lastName}</p>
+              <p className="text-xs text-gray-500">{o.address.addressLine1}</p>
+              {o.address.addressLine2 && <p className="text-xs text-gray-500">{o.address.addressLine2}</p>}
+              <p className="text-xs text-gray-500">{o.address.city}, {o.address.state} {o.address.postalCode}</p>
+              <p className="text-xs text-gray-500">{o.address.country}</p>
+              {o.address.phone && <p className="text-xs text-gray-500">{o.address.phone}</p>}
+            </div>
+          </div>
+
+          {/* Order Items */}
+          <div>
+            <p className="text-xs font-medium text-gray-500 mb-2">🛒 Items ({o.items.length})</p>
+            <div className="border border-gray-100 rounded-lg overflow-hidden">
+              {o.items.map((item, i) => (
+                <div key={item.id ?? i}
+                  className={`flex items-center gap-3 px-3 py-2.5 ${i !== o.items.length - 1 ? "border-b border-gray-50" : ""}`}>
+                  {/* Product Image */}
+                  {item.productImage
+                    ? <img src={item.productImage} alt={item.productName}
+                        className="w-10 h-10 rounded object-cover border border-gray-100 flex-shrink-0" />
+                    : <div className="w-10 h-10 rounded bg-gray-100 flex items-center justify-center flex-shrink-0 text-gray-300 text-lg">□</div>
+                  }
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{item.productName}</p>
+                    {/* Variant — Red / XL */}
+                    {item.variantInfo && (
+                      <p className="text-xs text-blue-600 font-medium">{item.variantInfo}</p>
+                    )}
+                    {/* Variant SKU */}
+                    {item.variant?.sku && (
+                      <p className="text-xs text-gray-400 font-mono">SKU: {item.variant.sku}</p>
+                    )}
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-xs text-gray-500">{fmt(item.unitPrice)} × {item.quantity}</p>
+                    <p className="text-sm font-medium">{fmt(item.totalPrice)}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Price Breakdown */}
+          <div className="bg-gray-50 rounded-lg p-3 space-y-1.5">
+            <p className="text-xs font-medium text-gray-500 mb-2">💰 Price Breakdown</p>
+            <div className="flex justify-between text-xs text-gray-600">
+              <span>Subtotal</span><span>{fmt(o.subtotal)}</span>
+            </div>
+            
+            {o.taxAmount > 0 && (
+              <div className="flex justify-between text-xs text-gray-600">
+                <span>Tax</span><span>{fmt(o.taxAmount)}</span>
+              </div>
+            )}
+            {o.discountAmount > 0 && (
+              <div className="flex justify-between text-xs text-green-600">
+                <span>Discount {o.coupon ? `(${o.coupon.code})` : ""}</span>
+                <span>− {fmt(o.discountAmount)}</span>
+              </div>
+            )}
+            <div className="flex justify-between text-sm font-semibold pt-1.5 border-t border-gray-200">
+              <span>Total</span><span>{fmt(o.totalAmount)}</span>
+            </div>
+          </div>
+
+          {/* Extra Info */}
+          <div className="grid grid-cols-2 gap-4 text-xs">
+            <div>
+              <p className="text-gray-400 mb-0.5">Payment Method</p>
+              <p className="font-medium">{o.paymentMethod ?? "—"}</p>
+            </div>
+            <div>
+              <p className="text-gray-400 mb-0.5">Order Date</p>
+              <p className="font-medium">{new Date(o.createdAt).toLocaleString()}</p>
+            </div>
+            {o.trackingNumber && (
+              <div>
+                <p className="text-gray-400 mb-0.5">Tracking #</p>
+                <p className="font-mono font-medium">{o.trackingNumber}</p>
+              </div>
+            )}
+            {o.shippedAt && (
+              <div>
+                <p className="text-gray-400 mb-0.5">Shipped At</p>
+                <p className="font-medium">{new Date(o.shippedAt).toLocaleDateString()}</p>
+              </div>
+            )}
+            {o.customerNote && (
+              <div className="col-span-2">
+                <p className="text-gray-400 mb-0.5">Customer Note</p>
+                <p className="bg-yellow-50 border border-yellow-100 rounded px-2 py-1.5">{o.customerNote}</p>
+              </div>
+            )}
+            {o.adminNote && (
+              <div className="col-span-2">
+                <p className="text-gray-400 mb-0.5">Admin Note</p>
+                <p className="bg-blue-50 border border-blue-100 rounded px-2 py-1.5">{o.adminNote}</p>
+              </div>
+            )}
+          </div>
+
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-gray-100 flex justify-between items-center">
+          <button onClick={() => { setViewModal({ open: false, order: null }); openOrderModal(o) }}
+            className="text-sm text-blue-600 hover:underline">
+            ✏️ Manage this order
+          </button>
+          <button onClick={() => setViewModal({ open: false, order: null })}
+            className="text-sm border border-gray-200 px-4 py-2 rounded-lg hover:bg-gray-50">
+            Close
+          </button>
+        </div>
+
+      </div>
+    </div>
+  )
+})()}
 
       {/* Coupon Modal */}
       {couponModal.open && (

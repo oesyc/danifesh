@@ -216,7 +216,7 @@ export default function CheckoutPage() {
     const price = item.variant?.price ?? item.product.basePrice
     return sum + price * item.quantity
   }, 0)
-  const shippingCost = subtotal >= 299900 ? 0 : 25000
+  const shippingCost = subtotal >= 1000000 ? 0 : 25000
   const totalAmount  = subtotal + shippingCost
 
   // ── Place order ──────────────────────────────────────────
@@ -354,7 +354,7 @@ export default function CheckoutPage() {
       </div>
 
       <div className="max-w-5xl mx-auto px-4 lg:px-6 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 xl:gap-6 items-start min-w-0">
+        <div className="grid grid-cols-1 md:grid-cols-[70%_30%] gap-6 items-start min-w-0">
 
           {/* ════ LEFT — Form / Review ═══════════════════════ */}
           <div>
@@ -515,7 +515,7 @@ export default function CheckoutPage() {
 
             {/* ── STEP 2: Review & Place ────────────────────── */}
             {step === 2 && (
-              <div className="space-y-4 w-full max-w-full overflow-x-hidden">
+              <div className="space-y-4 max-w-5xl overflow-hidden">
                 {/* Delivery summary */}
                 <div className="bg-white rounded-2xl border border-gray-100 p-5">
                   <div className="flex items-center justify-between mb-3">

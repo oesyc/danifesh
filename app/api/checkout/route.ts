@@ -5,7 +5,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/src/lib/auth"
 import { prisma } from "@/src/lib/prisma"
 import { getOrCreateCart } from "@/src/lib/cart-helper"
-
+import { transporter } from "@/src/lib/mailer"
+import { orderConfirmationEmail } from "@/src/lib/emails/orderConfirmation"
 // ─── Order number generator ───────────────────────────────
 async function generateOrderNumber(): Promise<string> {
   const today = new Date()
@@ -199,15 +200,45 @@ export async function POST(req: NextRequest) {
           link:    `/dashboard/orders/${newOrder.id}`,
         },
       })
-
+      
       // 7. Cart clear karo
       await tx.cartItem.deleteMany({ where: { cartId: cart.id } })
 
       return newOrder
-    })
 
+    })
+    try {
+      await transporter.sendMail({
+        from:    `"${process.env.STORE_NAME}" <${process.env.FROM_EMAIL}>`,
+        to:      session.user.email!,
+        subject: `Order Confirmed #${order.orderNumber} — ${process.env.STORE_NAME}`,
+        html: orderConfirmationEmail({
+          orderNumber:  order.orderNumber,
+          customerName: `${firstName} ${lastName}`,
+          items: cartItems.map((item) => ({
+            name:     item.product.name,
+            variant:  item.variant?.values.map((v) => v.value).join(" / "),
+            quantity: item.quantity,
+            price:    item.variant?.price ?? item.product.basePrice,
+          })),
+          subtotal,
+          shippingCost,
+          totalAmount,
+          address: {
+            line1:      addressLine1,
+            line2:      body.addressLine2 || undefined,
+            city,
+            state,
+            postalCode,
+            phone,
+          },
+        }),
+      })
+    } catch (emailErr) {
+      console.error("[ORDER_EMAIL]", emailErr)
+    }
     return NextResponse.json({
-      message: "Order place ho gaya!",
+      message: "Order placed!",
       orderId:     order.id,
       orderNumber: order.orderNumber,
     })

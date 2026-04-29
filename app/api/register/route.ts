@@ -1,4 +1,5 @@
 // src/app/api/register/route.ts
+// NOTE: Ye tumhara existing register route hai — sirf OTP verify karne ka code add karo
 
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/src/lib/prisma"
@@ -6,67 +7,64 @@ import bcrypt from "bcryptjs"
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json()
-    const { name, email, password } = body
+    const { name, email, password, otp } = await req.json()
 
-    // ── Validation ──────────────────────────────────────────
-    if (!name || !email || !password) {
-      return NextResponse.json(
-        { error: "Please fill all required fields" },
-        { status: 400 }
-      )
+    // ── Basic Validation ──────────────────────────────────
+    if (!name || !email || !password || !otp) {
+      return NextResponse.json({ error: "All fields are required" }, { status: 400 })
     }
 
     if (password.length < 6) {
-      return NextResponse.json(
-        { error: "Password should be at least 6 characters long" },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: "Password must be at least 6 characters long" }, { status: 400 })
     }
 
-    // ── Email pehle se exist karta hai? ─────────────────────
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
+    // ── OTP Verify karo ───────────────────────────────────
+    const tokenRecord = await prisma.verificationToken.findUnique({
+      where: { identifier_token: { identifier: `otp:${email}`, token: otp } }
     })
 
-    if (existingUser) {
-      return NextResponse.json(
-        { error: "This email is already registered" },
-        { status: 400 }
-      )
+    if (!tokenRecord) {
+      return NextResponse.json({ error: "Invalid OTP - Try again" }, { status: 400 })
     }
 
-    // ── Password hash karo ──────────────────────────────────
-    // 12 = kitna strong hash — zyada = slow but secure
+    if (tokenRecord.expires < new Date()) {
+      // Expired token delete karo
+      await prisma.verificationToken.delete({
+        where: { identifier_token: { identifier: `otp:${email}`, token: otp } }
+      })
+      return NextResponse.json({ error: "OTP expired - ask for new otp" }, { status: 400 })
+    }
+
+    // ── Check: email already registered? ─────────────────
+    const existing = await prisma.user.findUnique({ where: { email } })
+    if (existing) {
+      return NextResponse.json({ error: "Email already registered" }, { status: 409 })
+    }
+
+    // ── Password Hash karo ────────────────────────────────
     const passwordHash = await bcrypt.hash(password, 12)
 
-    // ── User banao database mein ────────────────────────────
+    // ── User banao ────────────────────────────────────────
     const user = await prisma.user.create({
       data: {
         name,
         email,
         passwordHash,
-        role: "USER", // hamesha USER se shuru
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        createdAt: true,
-        // passwordHash nahi bhejte kabhi!
       },
     })
 
-    return NextResponse.json(
-      { message: "Account created successfully!", user },
-      { status: 201 }
-    )
-  } catch (error) {
-    console.error("Register error:", error)
-    return NextResponse.json(
-      { error: "Server error occurred" },
-      { status: 500 }
-    )
+    // ── Used OTP delete karo ──────────────────────────────
+    await prisma.verificationToken.delete({
+      where: { identifier_token: { identifier: `otp:${email}`, token: otp } }
+    })
+
+    return NextResponse.json({
+      success: true,
+      user: { id: user.id, name: user.name, email: user.email }
+    })
+
+  } catch (e) {
+    console.error("[REGISTER]", e)
+    return NextResponse.json({ error: "Server error" }, { status: 500 })
   }
 }
